@@ -7,6 +7,9 @@
 		},
 		"annotations": [],
 		"type": "InformixTable",
-		"schema": []
+		"schema": [],
+		"typeProperties": {
+			"tableName": "informix.adcodi"
+		}
 	}
 }

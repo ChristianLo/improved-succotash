@@ -339,6 +339,13 @@
 									}
 								},
 								{
+									"name": "FECHA_ACTUALIZACION",
+									"type": "Derived",
+									"functionName": "",
+									"expression": "currentTimestamp()",
+									"attributeReferences": []
+								},
+								{
 									"name": "ORIGEN",
 									"type": "Direct",
 									"functionName": "",

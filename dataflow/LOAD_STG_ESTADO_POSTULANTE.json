@@ -14,10 +14,6 @@
 			],
 			"sinks": [
 				{
-					"linkedService": {
-						"referenceName": "UCSH_borrame",
-						"type": "LinkedServiceReference"
-					},
 					"name": "sink1"
 				}
 			],
@@ -61,27 +57,13 @@
 				"     ESTADO_POSTULANTE_SK = rowNumber()) ~> window1",
 				"window1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     input(",
-				"          ESTADO_POSTULANTE_SK as integer,",
-				"          CODIGO_ESTADO_POSTULANTE as string,",
-				"          ESTADO_POSTULANTE as string,",
-				"          CRC as integer,",
-				"          FECHA_CREACION as timestamp,",
-				"          FECHA_ACTUALIZACION as timestamp,",
-				"          ORIGEN as string,",
-				"          ETL_ID as integer",
-				"     ),",
-				"     format: 'table',",
-				"     store: 'sqlserver',",
-				"     schemaName: 'dbo',",
-				"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
-				"     insertable: true,",
-				"     updateable: false,",
-				"     deletable: false,",
-				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
+				"     keys:['ESTADO_POSTULANTE_SK'],",
+				"     store: 'cache',",
+				"     format: 'inline',",
+				"     output: false,",
+				"     saveOrder: 1,",
 				"     mapColumn(",
 				"          ESTADO_POSTULANTE_SK,",
 				"          CODIGO_ESTADO_POSTULANTE,",
