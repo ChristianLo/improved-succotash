@@ -339,13 +339,6 @@
 									}
 								},
 								{
-									"name": "FECHA_ACTUALIZACION",
-									"type": "Derived",
-									"functionName": "",
-									"expression": "currentTimestamp()",
-									"attributeReferences": []
-								},
-								{
 									"name": "ORIGEN",
 									"type": "Direct",
 									"functionName": "",
@@ -368,10 +361,11 @@
 		"Policy": {
 			"recurrence": {
 				"frequency": "Minute",
-				"interval": 15
+				"interval": 1
 			},
 			"mode": "Microbatch"
 		},
+		"status": "Stopped",
 		"allowVNetOverride": false
 	}
 }
