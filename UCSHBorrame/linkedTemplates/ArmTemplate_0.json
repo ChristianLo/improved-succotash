@@ -551,29 +551,35 @@
 									"attributeMappings": [
 										{
 											"name": "CODIGO_ESTADO_POSTULANTE",
-											"type": "Direct",
-											"functionName": "",
-											"attributeReference": {
-												"name": "codigo_estado_postulante",
-												"entity": "storage-data/estado_postulante",
-												"entityConnectionReference": {
-													"connectionName": "AzureBlobStorage1",
-													"type": "linkedservicetype"
+											"type": "Derived",
+											"functionName": "trim",
+											"expression": "trim(codigo_estado_postulante)",
+											"attributeReferences": [
+												{
+													"name": "codigo_estado_postulante",
+													"entity": "storage-data/estado_postulante",
+													"entityConnectionReference": {
+														"connectionName": "AzureBlobStorage1",
+														"type": "linkedservicetype"
+													}
 												}
-											}
+											]
 										},
 										{
 											"name": "ESTADO_POSTULANTE",
-											"type": "Direct",
-											"functionName": "",
-											"attributeReference": {
-												"name": "estado_postulante",
-												"entity": "storage-data/estado_postulante",
-												"entityConnectionReference": {
-													"connectionName": "AzureBlobStorage1",
-													"type": "linkedservicetype"
+											"type": "Derived",
+											"functionName": "trim",
+											"expression": "trim(estado_postulante)",
+											"attributeReferences": [
+												{
+													"name": "estado_postulante",
+													"entity": "storage-data/estado_postulante",
+													"entityConnectionReference": {
+														"connectionName": "AzureBlobStorage1",
+														"type": "linkedservicetype"
+													}
 												}
-											}
+											]
 										},
 										{
 											"name": "ORIGEN",
@@ -587,6 +593,13 @@
 													"type": "linkedservicetype"
 												}
 											}
+										},
+										{
+											"name": "FECHA_ACTUALIZACION",
+											"type": "Derived",
+											"functionName": "",
+											"expression": "currentTimestamp()",
+											"attributeReferences": []
 										}
 									]
 								}
@@ -651,7 +664,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "InformixSource",
-								"query": "select\ncodi_codi as CODIGO_ESTADO_POSTULANTE,\ncodi_desc as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';"
+								"query": "select\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';"
 							},
 							"sink": {
 								"type": "DelimitedTextSink",
