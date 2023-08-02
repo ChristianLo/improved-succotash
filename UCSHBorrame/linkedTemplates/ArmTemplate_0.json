@@ -148,10 +148,6 @@
 					],
 					"sinks": [
 						{
-							"linkedService": {
-								"referenceName": "UCSH_borrame",
-								"type": "LinkedServiceReference"
-							},
 							"name": "sink1"
 						}
 					],
@@ -195,27 +191,13 @@
 						"     ESTADO_POSTULANTE_SK = rowNumber()) ~> window1",
 						"window1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     input(",
-						"          ESTADO_POSTULANTE_SK as integer,",
-						"          CODIGO_ESTADO_POSTULANTE as string,",
-						"          ESTADO_POSTULANTE as string,",
-						"          CRC as integer,",
-						"          FECHA_CREACION as timestamp,",
-						"          FECHA_ACTUALIZACION as timestamp,",
-						"          ORIGEN as string,",
-						"          ETL_ID as integer",
-						"     ),",
-						"     format: 'table',",
-						"     store: 'sqlserver',",
-						"     schemaName: 'dbo',",
-						"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     deletable: false,",
-						"     upsertable: false,",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError',",
+						"     keys:['ESTADO_POSTULANTE_SK'],",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1,",
 						"     mapColumn(",
 						"          ESTADO_POSTULANTE_SK,",
 						"          CODIGO_ESTADO_POSTULANTE,",
@@ -229,8 +211,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]",
-				"[concat(variables('factoryId'), '/linkedServices/UCSH_borrame')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
 			]
 		},
 		{
@@ -576,6 +557,13 @@
 											}
 										},
 										{
+											"name": "FECHA_ACTUALIZACION",
+											"type": "Derived",
+											"functionName": "",
+											"expression": "currentTimestamp()",
+											"attributeReferences": []
+										},
+										{
 											"name": "ORIGEN",
 											"type": "Direct",
 											"functionName": "",
@@ -602,6 +590,7 @@
 					},
 					"mode": "Microbatch"
 				},
+				"status": "Stopped",
 				"allowVNetOverride": false
 			},
 			"dependsOn": [
@@ -621,7 +610,9 @@
 				"annotations": [],
 				"type": "InformixTable",
 				"schema": [],
-				"typeProperties": {}
+				"typeProperties": {
+					"tableName": "informix.adcodi"
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Informix1')]"
@@ -648,10 +639,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "InformixSource",
-								"query": {
-									"value": "select\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE, \ntrim(codi_desc) as ESTADO_POSTULANTE,\n\"ADCODI\" as ORIGEN,\nfrom adcodi\nwhere codi_id = \"sele_esta\"",
-									"type": "Expression"
-								}
+								"query": "select\ncodi_codi as CODIGO_ESTADO_POSTULANTE,\ncodi_desc as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';"
 							},
 							"sink": {
 								"type": "DelimitedTextSink",
@@ -693,44 +681,11 @@
 									},
 									{
 										"source": {
-											"name": "fecha_creacion",
-											"type": "DateTime"
-										},
-										"sink": {
-											"name": "fecha_creacion",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "fecha_actualizacion",
-											"type": "DateTime"
-										},
-										"sink": {
-											"name": "fecha_actualizacion",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
 											"name": "origen",
 											"type": "String"
 										},
 										"sink": {
 											"name": "origen",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "etl_id",
-											"type": "Int32"
-										},
-										"sink": {
-											"name": "etl_id",
 											"type": "String",
 											"physicalType": "String"
 										}
