@@ -1,0 +1,6 @@
+{
+	"name": "IR-informix",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
