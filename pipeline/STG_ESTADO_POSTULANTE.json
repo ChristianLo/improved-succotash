@@ -17,7 +17,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "InformixSource",
-						"query": "select\ncodi_codi as CODIGO_ESTADO_POSTULANTE,\ncodi_desc as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';"
+						"query": "select\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';"
 					},
 					"sink": {
 						"type": "DelimitedTextSink",
