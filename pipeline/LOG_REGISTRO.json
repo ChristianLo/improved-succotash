@@ -124,7 +124,17 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"waitOnCompletion": true
+					"pipeline": {
+						"referenceName": "STG_ESTADO_POSTULANTE",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ETL_ID": {
+							"value": "@variables('ETL_ID')",
+							"type": "Expression"
+						}
+					}
 				}
 			},
 			{
