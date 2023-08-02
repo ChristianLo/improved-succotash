@@ -596,6 +596,10 @@
 					],
 					"sinks": [
 						{
+							"linkedService": {
+								"referenceName": "UCSH_borrame",
+								"type": "LinkedServiceReference"
+							},
 							"name": "sink1"
 						}
 					],
@@ -639,13 +643,27 @@
 						"     ESTADO_POSTULANTE_SK = rowNumber()) ~> window1",
 						"window1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     input(",
+						"          ESTADO_POSTULANTE_SK as integer,",
+						"          CODIGO_ESTADO_POSTULANTE as string,",
+						"          ESTADO_POSTULANTE as string,",
+						"          CRC as integer,",
+						"          FECHA_CREACION as timestamp,",
+						"          FECHA_ACTUALIZACION as timestamp,",
+						"          ORIGEN as string,",
+						"          ETL_ID as integer",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     keys:['ESTADO_POSTULANTE_SK'],",
-						"     store: 'cache',",
-						"     format: 'inline',",
-						"     output: false,",
-						"     saveOrder: 1,",
+						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
 						"          ESTADO_POSTULANTE_SK,",
 						"          CODIGO_ESTADO_POSTULANTE,",
@@ -659,7 +677,8 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]",
+				"[concat(variables('factoryId'), '/linkedServices/UCSH_borrame')]"
 			]
 		},
 		{
@@ -1005,13 +1024,6 @@
 											}
 										},
 										{
-											"name": "FECHA_ACTUALIZACION",
-											"type": "Derived",
-											"functionName": "",
-											"expression": "currentTimestamp()",
-											"attributeReferences": []
-										},
-										{
 											"name": "ORIGEN",
 											"type": "Direct",
 											"functionName": "",
@@ -1034,7 +1046,7 @@
 				"Policy": {
 					"recurrence": {
 						"frequency": "Minute",
-						"interval": 15
+						"interval": 1
 					},
 					"mode": "Microbatch"
 				},
