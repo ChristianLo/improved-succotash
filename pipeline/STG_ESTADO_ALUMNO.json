@@ -1,0 +1,213 @@
+{
+	"name": "STG_ESTADO_ALUMNO",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy a CSV",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "InformixSource",
+						"query": {
+							"value": "select\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE, \ntrim(codi_desc) as ESTADO_POSTULANTE,\n\"ADCODI\" as ORIGEN,\nfrom adcodi\nwhere codi_id = \"sele_esta\"",
+							"type": "Expression"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"validateDataConsistency": true,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "codigo_estado_postulante",
+									"type": "String"
+								},
+								"sink": {
+									"name": "codigo_estado_postulante",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "estado_postulante",
+									"type": "String"
+								},
+								"sink": {
+									"name": "estado_postulante",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "fecha_creacion",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "fecha_creacion",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "fecha_actualizacion",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "fecha_actualizacion",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "origen",
+									"type": "String"
+								},
+								"sink": {
+									"name": "origen",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "etl_id",
+									"type": "Int32"
+								},
+								"sink": {
+									"name": "etl_id",
+									"type": "String",
+									"physicalType": "String"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "InformixTable1",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "COPY_STG_ESTADO_POSTULANTE",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ADD STG AZURE SQL",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "Copy a CSV",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "LOAD_STG_ESTADO_POSTULANTE",
+						"type": "DataFlowReference",
+						"parameters": {
+							"ETL_ID": {
+								"value": "@int(pipeline().parameters.ETL_ID)",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "7b44771e-d23f-4f67-878a-49c4709dda7c"
+					}
+				}
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ADD STG AZURE SQL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "INSERTADOS",
+							"value": {
+								"type": "Expression",
+								"content": "@activity('ADD STG AZURE SQL').output.runStatus.metrics.sink1.rowsWritten"
+							}
+						},
+						{
+							"key": "ACTUALIZADOS",
+							"value": {
+								"type": "Expression",
+								"content": "@activity('ADD STG AZURE SQL').output.runStatus.metrics.sink1.rowsWritten"
+							}
+						}
+					],
+					"setSystemVariable": true
+				}
+			}
+		],
+		"parameters": {
+			"ETL_ID": {
+				"type": "string"
+			}
+		},
+		"annotations": []
+	}
+}
