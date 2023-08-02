@@ -1,0 +1,84 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "UCSHBorrame"
+		},
+		"AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+		},
+		"Informix1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Informix1'"
+		},
+		"Informix1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Informix1'"
+		},
+		"Informix1_credential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'credential' of 'Informix1'"
+		},
+		"UCSH_borrame_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'UCSH_borrame'"
+		},
+		"Informix1_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "informix"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "UCSHBorrame_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureBlobStorage1_connectionString": {
+						"value": "[parameters('AzureBlobStorage1_connectionString')]"
+					},
+					"UCSH_borrame_connectionString": {
+						"value": "[parameters('UCSH_borrame_connectionString')]"
+					},
+					"Informix1_connectionString": {
+						"value": "[parameters('Informix1_connectionString')]"
+					},
+					"Informix1_password": {
+						"value": "[parameters('Informix1_password')]"
+					},
+					"Informix1_credential": {
+						"value": "[parameters('Informix1_credential')]"
+					},
+					"Informix1_properties_typeProperties_userName": {
+						"value": "[parameters('Informix1_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

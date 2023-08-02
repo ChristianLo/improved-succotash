@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "UCSHBorrame"
+		},
+		"AzureBlobStorage1_connectionString": {
+			"value": ""
+		},
+		"Informix1_connectionString": {
+			"value": ""
+		},
+		"Informix1_password": {
+			"value": ""
+		},
+		"Informix1_credential": {
+			"value": ""
+		},
+		"UCSH_borrame_connectionString": {
+			"value": ""
+		},
+		"Informix1_properties_typeProperties_userName": {
+			"value": "informix"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
