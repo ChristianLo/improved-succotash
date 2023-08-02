@@ -1,0 +1,12 @@
+{
+	"name": "InformixTable1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Informix1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "InformixTable",
+		"schema": []
+	}
+}

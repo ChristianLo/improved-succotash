@@ -1,0 +1,213 @@
+{
+	"name": "LOG_REGISTRO",
+	"properties": {
+		"activities": [
+			{
+				"name": "Inicio de LOG",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "UCSH_borrame",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": {
+								"value": "INSERT INTO LOG_PROCESO_ETL (AMBIENTE, ESTADO, FECHA_INICIO_EJEC, PROCESO, TAREA, TIPO_CARGA, TIPO_PROCESO) VALUES\n(\n    '@{pipeline().globalParameters.Environment}',\n    'En Ejecucion',\n    GETDATE(),\n    '@{pipeline().Pipeline}',\n    '@{pipeline().TriggerName}',\n    '@{pipeline().parameters.ETL_CARGA}',\n    '@{pipeline().parameters.ETL_TIPO_PROCESO}'\n)",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Obtener ID",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Inicio de LOG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "UCSH_borrame",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "SELECT TOP 1 [ETL_ID] FROM [dbo].[LOG_PROCESO_ETL] ORDER BY FECHA_INICIO_EJEC DESC;"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Guardar ID",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Obtener ID",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ETL_ID",
+					"value": {
+						"value": "@string(activity('Obtener ID').output.resultSets[0].rows[0].ETL_ID)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Fecha de Inicio",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ETL_FECHA",
+					"value": {
+						"value": "@utcNow()",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline1",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Fecha de Inicio",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Guardar ID",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Duracion",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ETL_DURACION",
+					"value": {
+						"value": "@string(div(sub(ticks(utcNow()),ticks(variables('ETL_FECHA'))),10000000))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Terminar LOG",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Duracion",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "UCSH_borrame",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": {
+								"value": "UPDATE [dbo].[LOG_PROCESO_ETL]\nSET\n    [FECHA_TERMINO_EJEC] = GETDATE(),\n    [DURACION] = @{variables('ETL_DURACION')},\n    [ESTADO] = 'Terminado',\n    [CANTIDAD_INSERTADOS] = 10,\n    [CANTIDAD_ACTUALIZADOS] = 10,\n    [TAREA] = '@{pipeline().TriggerName}'\nWHERE\n[ETL_ID] = @{variables('ETL_ID')}",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"ETL_TIPO_PROCESO": {
+				"type": "string",
+				"defaultValue": "CARGA"
+			},
+			"ETL_CARGA": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"ETL_ID": {
+				"type": "String"
+			},
+			"ETL_FECHA": {
+				"type": "String"
+			},
+			"ETL_DURACION": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}

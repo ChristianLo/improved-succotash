@@ -1,0 +1,12 @@
+{
+	"name": "UCSHBorrame",
+	"properties": {
+		"globalParameters": {
+			"Environment": {
+				"type": "string",
+				"value": "DEV"
+			}
+		}
+	},
+	"location": "eastus"
+}
