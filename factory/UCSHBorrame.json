@@ -6,6 +6,9 @@
 				"type": "string",
 				"value": "DEV"
 			}
+		},
+		"globalConfigurations": {
+			"PolicyValidationEnabled": "true"
 		}
 	},
 	"location": "eastus"
