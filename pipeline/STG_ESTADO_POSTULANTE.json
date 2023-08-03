@@ -18,7 +18,7 @@
 					"source": {
 						"type": "InformixSource",
 						"query": {
-							"value": "select\ncase\n\twhen codi_codi is null then 0\n\telse row_number() over (order by codi_codi)\nend as ESTADO_POSTULANTE_SK,\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';",
+							"value": "select\ncase\n\twhen codi_codi is null then 0\n\telse row_number() over (order by codi_codi)\nend as ESTADO_POSTULANTE_SK,\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODIZ' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';",
 							"type": "Expression"
 						}
 					},
@@ -139,7 +139,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "7b44771e-d23f-4f67-878a-49c4709dda7c"
+						"customizedCheckpointKey": "d567522b-ed10-4dbf-9845-96930c7a842b"
 					}
 				}
 			},
@@ -181,11 +181,6 @@
 				}
 			}
 		],
-		"parameters": {
-			"ETL_ID": {
-				"type": "string"
-			}
-		},
 		"annotations": []
 	}
 }

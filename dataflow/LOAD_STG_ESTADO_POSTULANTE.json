@@ -9,7 +9,14 @@
 						"referenceName": "AzureBlobStorage1",
 						"type": "LinkedServiceReference"
 					},
-					"name": "source1"
+					"name": "EstadoPostulanteCSV"
+				},
+				{
+					"linkedService": {
+						"referenceName": "UCSH_borrame",
+						"type": "LinkedServiceReference"
+					},
+					"name": "EstadoPostulanteSQL"
 				}
 			],
 			"sinks": [
@@ -23,10 +30,19 @@
 			],
 			"transformations": [
 				{
+					"name": "CrearCRC"
+				},
+				{
+					"name": "Exists"
+				},
+				{
+					"name": "Lookup"
+				},
+				{
 					"name": "derivedColumn1"
 				},
 				{
-					"name": "window1"
+					"name": "alterRow1"
 				}
 			],
 			"scriptLines": [
@@ -34,9 +50,10 @@
 				"     ETL_ID as integer (1)",
 				"}",
 				"source(output(",
-				"          CODIGO_ESTADO_POSTULANTE as string,",
-				"          ESTADO_POSTULANTE as string,",
-				"          ORIGEN as string",
+				"          estado_postulante_sk as short,",
+				"          codigo_estado_postulante as string,",
+				"          estado_postulante as string,",
+				"          origen as string",
 				"     ),",
 				"     useSchema: false,",
 				"     allowSchemaDrift: true,",
@@ -52,14 +69,40 @@
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
-				"     columnNamesAsHeader: true) ~> source1",
-				"source1 derive(ESTADO_POSTULANTE_SK = 1,",
-				"          FECHA_CREACION = currentTimestamp(),",
-				"          {FECHA_MODIFICACIÓN} = currentTimestamp(),",
-				"          ETL_ID = $ETL_ID) ~> derivedColumn1",
-				"derivedColumn1 window(asc(CODIGO_ESTADO_POSTULANTE, true),",
-				"     ESTADO_POSTULANTE_SK = rowNumber()) ~> window1",
-				"window1 sink(allowSchemaDrift: true,",
+				"     columnNamesAsHeader: true) ~> EstadoPostulanteCSV",
+				"source(output(",
+				"          ESTADO_POSTULANTE_SK as integer,",
+				"          CODIGO_ESTADO_POSTULANTE as string,",
+				"          ESTADO_POSTULANTE as string,",
+				"          CRC as long,",
+				"          FECHA_CREACION as timestamp,",
+				"          FECHA_ACTUALIZACION as timestamp,",
+				"          ORIGEN as string,",
+				"          ETL_ID as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     limit: 100,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> EstadoPostulanteSQL",
+				"EstadoPostulanteCSV derive(CRC = crc32(codigo_estado_postulante,estado_postulante)) ~> CrearCRC",
+				"CrearCRC, EstadoPostulanteSQL exists(CrearCRC@CRC == EstadoPostulanteSQL@CRC,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> Exists",
+				"Exists, EstadoPostulanteSQL lookup(EstadoPostulanteCSV@estado_postulante_sk == EstadoPostulanteSQL@ESTADO_POSTULANTE_SK,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> Lookup",
+				"Lookup derive(FECHA_ACTUALIZACION = iif(CrearCRC@CRC != iifNull(EstadoPostulanteSQL@CRC, 0),\r",
+				"currentTimestamp(),\r",
+				"FECHA_ACTUALIZACION\r",
+				"),",
+				"          ETL_ID = iif(CrearCRC@CRC != iifNull(EstadoPostulanteSQL@CRC, 0),$ETL_ID,ETL_ID)) ~> derivedColumn1",
+				"derivedColumn1 alterRow(upsertIf(true())) ~> alterRow1",
+				"alterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          ESTADO_POSTULANTE_SK as integer,",
@@ -75,20 +118,22 @@
 				"     store: 'sqlserver',",
 				"     schemaName: 'dbo',",
 				"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
-				"     insertable: true,",
+				"     insertable: false,",
 				"     updateable: false,",
 				"     deletable: false,",
-				"     upsertable: false,",
+				"     upsertable: true,",
+				"     keys:['estado_postulante_sk'],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          ESTADO_POSTULANTE_SK,",
-				"          CODIGO_ESTADO_POSTULANTE,",
-				"          ESTADO_POSTULANTE,",
+				"          ESTADO_POSTULANTE_SK = EstadoPostulanteCSV@estado_postulante_sk,",
+				"          CODIGO_ESTADO_POSTULANTE = EstadoPostulanteCSV@codigo_estado_postulante,",
+				"          ESTADO_POSTULANTE = EstadoPostulanteCSV@estado_postulante,",
+				"          ORIGEN = EstadoPostulanteCSV@origen,",
+				"          CRC = CrearCRC@CRC,",
 				"          FECHA_CREACION,",
-				"          FECHA_ACTUALIZACION = {FECHA_MODIFICACIÓN},",
-				"          ORIGEN,",
+				"          FECHA_ACTUALIZACION,",
 				"          ETL_ID",
 				"     )) ~> sink1"
 			]
