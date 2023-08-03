@@ -46,9 +46,6 @@
 				}
 			],
 			"scriptLines": [
-				"parameters{",
-				"     ETL_ID as integer (1)",
-				"}",
 				"source(output(",
 				"          estado_postulante_sk as short,",
 				"          codigo_estado_postulante as string,",
@@ -99,8 +96,7 @@
 				"Lookup derive(FECHA_ACTUALIZACION = iif(CrearCRC@CRC != iifNull(EstadoPostulanteSQL@CRC, 0),\r",
 				"currentTimestamp(),\r",
 				"FECHA_ACTUALIZACION\r",
-				"),",
-				"          ETL_ID = iif(CrearCRC@CRC != iifNull(EstadoPostulanteSQL@CRC, 0),$ETL_ID,ETL_ID)) ~> derivedColumn1",
+				")) ~> derivedColumn1",
 				"derivedColumn1 alterRow(upsertIf(true())) ~> alterRow1",
 				"alterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
