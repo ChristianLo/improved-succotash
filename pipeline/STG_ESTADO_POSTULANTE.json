@@ -18,7 +18,7 @@
 					"source": {
 						"type": "InformixSource",
 						"query": {
-							"value": "select\ncase\n\twhen codi_codi is null then 0\n\telse row_number() over (order by codi_codi)\nend as ESTADO_POSTULANTE_SK,\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODIZ' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';",
+							"value": "select\ncase\n\twhen codi_codi is null then 0\n\telse row_number() over (order by codi_codi)\nend as ESTADO_POSTULANTE_SK,\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';",
 							"type": "Expression"
 						}
 					},
@@ -125,13 +125,7 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "LOAD_STG_ESTADO_POSTULANTE",
-						"type": "DataFlowReference",
-						"parameters": {
-							"ETL_ID": {
-								"value": "@int(pipeline().parameters.ETL_ID)",
-								"type": "Expression"
-							}
-						}
+						"type": "DataFlowReference"
 					},
 					"compute": {
 						"coreCount": 8,
@@ -139,7 +133,7 @@
 					},
 					"traceLevel": "Fine",
 					"continuationSettings": {
-						"customizedCheckpointKey": "d567522b-ed10-4dbf-9845-96930c7a842b"
+						"customizedCheckpointKey": "5bf53dfa-8d56-466a-bab4-513f0b3441c7"
 					}
 				}
 			},
@@ -181,6 +175,11 @@
 				}
 			}
 		],
+		"parameters": {
+			"ETL_ID": {
+				"type": "string"
+			}
+		},
 		"annotations": []
 	}
 }
