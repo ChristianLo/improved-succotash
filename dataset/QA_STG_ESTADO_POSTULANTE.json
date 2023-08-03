@@ -1,0 +1,56 @@
+{
+	"name": "QA_STG_ESTADO_POSTULANTE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "UCSH_borrame",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ESTADO_POSTULANTE_SK",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CODIGO_ESTADO_POSTULANTE",
+				"type": "char"
+			},
+			{
+				"name": "ESTADO_POSTULANTE",
+				"type": "varchar"
+			},
+			{
+				"name": "CRC",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FECHA_CREACION",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "FECHA_ACTUALIZACION",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "ORIGEN",
+				"type": "varchar"
+			},
+			{
+				"name": "ETL_ID",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "QA_STG_ESTADO_POSTULANTE"
+		}
+	}
+}

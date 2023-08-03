@@ -1,0 +1,57 @@
+{
+	"name": "SIMPLE_LOAD",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureBlobStorage1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "derivedColumn3"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          estado_postulante_sk as short,",
+				"          codigo_estado_postulante as string,",
+				"          estado_postulante as string,",
+				"          fecha_creacion as string,",
+				"          fecha_actualizacion as string,",
+				"          origen as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     limit: 100,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     format: 'delimited',",
+				"     container: 'storage-data',",
+				"     folderPath: 'estado_postulante',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> source1",
+				"derivedColumn2 derive() ~> derivedColumn1",
+				"derivedColumn3 derive() ~> derivedColumn2",
+				"source1 derive() ~> derivedColumn3"
+			]
+		}
+	}
+}

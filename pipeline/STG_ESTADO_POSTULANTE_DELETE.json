@@ -1,11 +1,44 @@
 {
-	"name": "STG_ESTADO_POSTULANTE",
+	"name": "STG_ESTADO_POSTULANTE_DELETE",
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy a CSV",
-				"type": "Copy",
+				"name": "Borrar STG",
+				"type": "Script",
 				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "UCSH_borrame",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "DELETE [dbo].[QA_STG_ESTADO_POSTULANTE];"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Cargar STG",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Borrar STG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -23,18 +56,12 @@
 						}
 					},
 					"sink": {
-						"type": "DelimitedTextSink",
-						"storeSettings": {
-							"type": "AzureBlobStorageWriteSettings"
-						},
-						"formatSettings": {
-							"type": "DelimitedTextWriteSettings",
-							"quoteAllText": true,
-							"fileExtension": ".txt"
-						}
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
 					},
 					"enableStaging": false,
-					"validateDataConsistency": true,
+					"validateDataConsistency": false,
 					"translator": {
 						"type": "TabularTranslator",
 						"mappings": [
@@ -44,9 +71,9 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "estado_postulante_sk",
-									"type": "String",
-									"physicalType": "String"
+									"name": "ESTADO_POSTULANTE_SK",
+									"type": "Int32",
+									"physicalType": "int"
 								}
 							},
 							{
@@ -55,9 +82,9 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "codigo_estado_postulante",
+									"name": "CODIGO_ESTADO_POSTULANTE",
 									"type": "String",
-									"physicalType": "String"
+									"physicalType": "char"
 								}
 							},
 							{
@@ -66,9 +93,9 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "estado_postulante",
+									"name": "ESTADO_POSTULANTE",
 									"type": "String",
-									"physicalType": "String"
+									"physicalType": "varchar"
 								}
 							},
 							{
@@ -77,9 +104,9 @@
 									"type": "DateTime"
 								},
 								"sink": {
-									"name": "fecha_creacion",
-									"type": "String",
-									"physicalType": "String"
+									"name": "FECHA_CREACION",
+									"type": "DateTime",
+									"physicalType": "datetime"
 								}
 							},
 							{
@@ -88,9 +115,9 @@
 									"type": "DateTime"
 								},
 								"sink": {
-									"name": "fecha_actualizacion",
-									"type": "String",
-									"physicalType": "String"
+									"name": "FECHA_ACTUALIZACION",
+									"type": "DateTime",
+									"physicalType": "datetime"
 								}
 							},
 							{
@@ -99,9 +126,20 @@
 									"type": "String"
 								},
 								"sink": {
-									"name": "origen",
+									"name": "ORIGEN",
 									"type": "String",
-									"physicalType": "String"
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "etl_id",
+									"type": "Int32"
+								},
+								"sink": {
+									"name": "ETL_ID",
+									"type": "Int32",
+									"physicalType": "int"
 								}
 							}
 						],
@@ -120,57 +158,17 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "COPY_STG_ESTADO_POSTULANTE",
+						"referenceName": "QA_STG_ESTADO_POSTULANTE",
 						"type": "DatasetReference"
 					}
 				]
 			},
 			{
-				"name": "ADD STG AZURE SQL",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "Copy a CSV",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "LOAD_STG_ESTADO_POSTULANTE",
-						"type": "DataFlowReference",
-						"parameters": {
-							"ETL_ID": {
-								"value": "@int(pipeline().parameters.ETL_ID)",
-								"type": "Expression"
-							}
-						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine",
-					"continuationSettings": {
-						"customizedCheckpointKey": "7b44771e-d23f-4f67-878a-49c4709dda7c"
-					}
-				}
-			},
-			{
-				"name": "Set variable1",
+				"name": "Retorno de pipeline",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "ADD STG AZURE SQL",
+						"activity": "Cargar STG",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -188,14 +186,14 @@
 							"key": "INSERTADOS",
 							"value": {
 								"type": "Expression",
-								"content": "@activity('ADD STG AZURE SQL').output.runStatus.metrics.sink1.rowsWritten"
+								"content": "@activity('Cargar STG').output.rowsRead"
 							}
 						},
 						{
 							"key": "ACTUALIZADOS",
 							"value": {
 								"type": "Expression",
-								"content": "@activity('ADD STG AZURE SQL').output.runStatus.metrics.sink1.rowsWritten"
+								"content": "@activity('Cargar STG').output.rowsCopied"
 							}
 						}
 					],
