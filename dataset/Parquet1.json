@@ -1,0 +1,21 @@
+{
+	"name": "Parquet1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "stg_estado_postulante",
+				"folderPath": "estado_postulante",
+				"container": "storage-data"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
