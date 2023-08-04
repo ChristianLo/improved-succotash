@@ -14,7 +14,7 @@
 				"folderPath": "estado_postulante",
 				"container": "storage-data"
 			},
-			"compressionCodec": "snappy"
+			"compressionCodec": "none"
 		},
 		"schema": []
 	}
