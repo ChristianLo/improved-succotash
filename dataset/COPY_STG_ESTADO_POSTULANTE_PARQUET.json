@@ -1,5 +1,5 @@
 {
-	"name": "Parquet1",
+	"name": "COPY_STG_ESTADO_POSTULANTE_PARQUET",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureBlobStorage1",
@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "stg_estado_postulante",
+				"fileName": "stg_estado_postulante.csv",
 				"folderPath": "estado_postulante",
 				"container": "storage-data"
 			},
