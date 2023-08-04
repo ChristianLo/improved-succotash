@@ -102,6 +102,32 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/COPY_STG_ESTADO_POSTULANTE_PARQUET')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "stg_estado_postulante.csv",
+						"folderPath": "estado_postulante",
+						"container": "storage-data"
+					},
+					"compressionCodec": "none"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/QA_STG_ESTADO_POSTULANTE')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -204,7 +230,14 @@
 								"referenceName": "AzureBlobStorage1",
 								"type": "LinkedServiceReference"
 							},
-							"name": "source1"
+							"name": "EstadoPostulanteCSV"
+						},
+						{
+							"linkedService": {
+								"referenceName": "UCSH_borrame",
+								"type": "LinkedServiceReference"
+							},
+							"name": "EstadoPostulanteSQL"
 						}
 					],
 					"sinks": [
@@ -218,43 +251,70 @@
 					],
 					"transformations": [
 						{
+							"name": "CrearCRC"
+						},
+						{
+							"name": "Exists"
+						},
+						{
+							"name": "Lookup"
+						},
+						{
 							"name": "derivedColumn1"
 						},
 						{
-							"name": "window1"
+							"name": "alterRow1"
 						}
 					],
 					"scriptLines": [
-						"parameters{",
-						"     ETL_ID as integer (1)",
-						"}",
 						"source(output(",
-						"          CODIGO_ESTADO_POSTULANTE as string,",
-						"          ESTADO_POSTULANTE as string,",
-						"          ORIGEN as string",
+						"          estado_postulante_sk as integer,",
+						"          codigo_estado_postulante as string,",
+						"          estado_postulante as string,",
+						"          origen as string",
 						"     ),",
-						"     useSchema: false,",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     limit: 100,",
 						"     ignoreNoFilesFound: false,",
 						"     enableCdc: true,",
 						"     mode: 'read',",
-						"     skipInitialLoad: false,",
-						"     format: 'delimited',",
+						"     skipInitialLoad: true,",
+						"     format: 'parquet',",
 						"     container: 'storage-data',",
-						"     folderPath: 'estado_postulante',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true) ~> source1",
-						"source1 derive(ESTADO_POSTULANTE_SK = 1,",
-						"          FECHA_CREACION = currentTimestamp(),",
-						"          {FECHA_MODIFICACIÓN} = currentTimestamp(),",
-						"          ETL_ID = $ETL_ID) ~> derivedColumn1",
-						"derivedColumn1 window(asc(CODIGO_ESTADO_POSTULANTE, true),",
-						"     ESTADO_POSTULANTE_SK = rowNumber()) ~> window1",
-						"window1 sink(allowSchemaDrift: true,",
+						"     folderPath: 'estado_postulante') ~> EstadoPostulanteCSV",
+						"source(output(",
+						"          ESTADO_POSTULANTE_SK as integer,",
+						"          CODIGO_ESTADO_POSTULANTE as string,",
+						"          ESTADO_POSTULANTE as string,",
+						"          CRC as long,",
+						"          FECHA_CREACION as timestamp,",
+						"          FECHA_ACTUALIZACION as timestamp,",
+						"          ORIGEN as string,",
+						"          ETL_ID as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     limit: 100,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> EstadoPostulanteSQL",
+						"EstadoPostulanteCSV derive(CRC = crc32(codigo_estado_postulante,estado_postulante)) ~> CrearCRC",
+						"CrearCRC, EstadoPostulanteSQL exists(CrearCRC@CRC == EstadoPostulanteSQL@CRC,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> Exists",
+						"Exists, EstadoPostulanteSQL lookup(EstadoPostulanteCSV@estado_postulante_sk == EstadoPostulanteSQL@ESTADO_POSTULANTE_SK,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> Lookup",
+						"Lookup derive(FECHA_ACTUALIZACION = iif(CrearCRC@CRC != iifNull(EstadoPostulanteSQL@CRC, 0),\r",
+						"currentTimestamp(),\r",
+						"FECHA_ACTUALIZACION\r",
+						")) ~> derivedColumn1",
+						"derivedColumn1 alterRow(upsertIf(true())) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          ESTADO_POSTULANTE_SK as integer,",
@@ -270,20 +330,22 @@
 						"     store: 'sqlserver',",
 						"     schemaName: 'dbo',",
 						"     tableName: 'QA_STG_ESTADO_POSTULANTE',",
-						"     insertable: true,",
+						"     insertable: false,",
 						"     updateable: false,",
 						"     deletable: false,",
-						"     upsertable: false,",
+						"     upsertable: true,",
+						"     keys:['estado_postulante_sk'],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
-						"          ESTADO_POSTULANTE_SK,",
-						"          CODIGO_ESTADO_POSTULANTE,",
-						"          ESTADO_POSTULANTE,",
+						"          ESTADO_POSTULANTE_SK = EstadoPostulanteCSV@estado_postulante_sk,",
+						"          CODIGO_ESTADO_POSTULANTE = EstadoPostulanteCSV@codigo_estado_postulante,",
+						"          ESTADO_POSTULANTE = EstadoPostulanteCSV@estado_postulante,",
+						"          ORIGEN = EstadoPostulanteCSV@origen,",
+						"          CRC = CrearCRC@CRC,",
 						"          FECHA_CREACION,",
-						"          FECHA_ACTUALIZACION = {FECHA_MODIFICACIÓN},",
-						"          ORIGEN,",
+						"          FECHA_ACTUALIZACION,",
 						"          ETL_ID",
 						"     )) ~> sink1"
 					]
@@ -563,19 +625,17 @@
 							"source": {
 								"type": "InformixSource",
 								"query": {
-									"value": "select\ncase\n\twhen codi_codi is null then 0\n\telse row_number() over (order by codi_codi)\nend as ESTADO_POSTULANTE_SK,\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\nCURRENT as FECHA_CREACION,\nCURRENT as FECHA_ACTUALIZACION,\n'ADCODI' as ORIGEN,\n@{pipeline().parameters.ETL_ID} as ETL_ID\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';",
+									"value": "select\ncase\n\twhen codi_codi is null then 0\n\telse row_number() over (order by codi_codi)\nend as ESTADO_POSTULANTE_SK,\ntrim(codi_codi) as CODIGO_ESTADO_POSTULANTE,\ntrim(codi_desc) as ESTADO_POSTULANTE,\n'ADCODI' as ORIGEN\nfrom informix.adcodi\nwhere codi_id = 'sele_esta';",
 									"type": "Expression"
 								}
 							},
 							"sink": {
-								"type": "DelimitedTextSink",
+								"type": "ParquetSink",
 								"storeSettings": {
 									"type": "AzureBlobStorageWriteSettings"
 								},
 								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
+									"type": "ParquetWriteSettings"
 								}
 							},
 							"enableStaging": false,
@@ -618,28 +678,6 @@
 									},
 									{
 										"source": {
-											"name": "fecha_creacion",
-											"type": "DateTime"
-										},
-										"sink": {
-											"name": "fecha_creacion",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
-											"name": "fecha_actualizacion",
-											"type": "DateTime"
-										},
-										"sink": {
-											"name": "fecha_actualizacion",
-											"type": "String",
-											"physicalType": "String"
-										}
-									},
-									{
-										"source": {
 											"name": "origen",
 											"type": "String"
 										},
@@ -666,7 +704,7 @@
 						],
 						"outputs": [
 							{
-								"referenceName": "COPY_STG_ESTADO_POSTULANTE",
+								"referenceName": "COPY_STG_ESTADO_POSTULANTE_PARQUET",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
@@ -695,14 +733,10 @@
 							"dataflow": {
 								"referenceName": "LOAD_STG_ESTADO_POSTULANTE",
 								"type": "DataFlowReference",
-								"parameters": {
-									"ETL_ID": {
-										"value": "@int(pipeline().parameters.ETL_ID)",
-										"type": "Expression"
-									}
-								},
+								"parameters": {},
 								"datasetParameters": {
-									"source1": {},
+									"EstadoPostulanteCSV": {},
+									"EstadoPostulanteSQL": {},
 									"sink1": {}
 								}
 							},
@@ -713,45 +747,8 @@
 							},
 							"traceLevel": "Fine",
 							"continuationSettings": {
-								"customizedCheckpointKey": "7b44771e-d23f-4f67-878a-49c4709dda7c"
+								"customizedCheckpointKey": "fd4c5ae6-aa1c-4028-b9ca-f8d22e86fae8"
 							}
-						}
-					},
-					{
-						"name": "Set variable1",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "ADD STG AZURE SQL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "pipelineReturnValue",
-							"value": [
-								{
-									"key": "INSERTADOS",
-									"value": {
-										"type": "Expression",
-										"content": "@activity('ADD STG AZURE SQL').output.runStatus.metrics.sink1.rowsWritten"
-									}
-								},
-								{
-									"key": "ACTUALIZADOS",
-									"value": {
-										"type": "Expression",
-										"content": "@activity('ADD STG AZURE SQL').output.runStatus.metrics.sink1.rowsWritten"
-									}
-								}
-							],
-							"setSystemVariable": true
 						}
 					}
 				],
@@ -759,16 +756,11 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"parameters": {
-					"ETL_ID": {
-						"type": "string"
-					}
-				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/InformixTable1')]",
-				"[concat(variables('factoryId'), '/datasets/COPY_STG_ESTADO_POSTULANTE')]",
+				"[concat(variables('factoryId'), '/datasets/COPY_STG_ESTADO_POSTULANTE_PARQUET')]",
 				"[concat(variables('factoryId'), '/dataflows/LOAD_STG_ESTADO_POSTULANTE')]"
 			]
 		},
