@@ -11,5 +11,10 @@
 			"PolicyValidationEnabled": "true"
 		}
 	},
-	"location": "eastus"
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "b19d5d09-5ffd-4c37-8889-d96261d6a9a3",
+		"tenantId": "04f79544-ad13-41d3-aa7c-ee5e79e52c1c"
+	}
 }
